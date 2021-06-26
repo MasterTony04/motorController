@@ -14,6 +14,7 @@
 //    doc["temperature"] = temp;
 //    doc["humidity"] = hum;
 //    doc["incubationStatus"] = incubationActive;
+//    doc["outsideFanStatus"] = fan2status
 //    doc["powerPriority"] = powerPriority;
 //    doc["birdType"] = birdTypeNo;
 //    doc["incubationDays"] = incubationDays;
