@@ -1,8 +1,25 @@
 #include <Arduino.h>
 #include<EEPROM.h>
+#include <SoftwareSerial.h>
 #include<SimpleTimer.h>
+#include <ArduinoJson.h>
+
 SimpleTimer positionTwoTimer(36000);
 SimpleTimer demo(180000);
+
+
+//Communication Pins
+uint8_t input_rx_pin = 2;
+uint8_t input_tx_pin = 3;
+
+uint8_t output_rx_pin = 5;
+uint8_t output_tx_pin = 6;
+
+SoftwareSerial InputSerial(input_rx_pin, input_tx_pin);
+SoftwareSerial OutputSerial(output_rx_pin, output_rx_pin);
+
+StaticJsonDocument <1024>doc;
+
 
 int bSwitch = 12, fSwitch = 11, fanOut = 10;
 int motA = A0, motB =A1 ;
@@ -10,9 +27,31 @@ bool forwardMotor = true, startMotor = false, timer2Active=false, timer4Active=f
 int restingPosition = 1;
 bool startTimerTwo=false, startTimerOne=false;
 
+bool fan2status = false;
+
+
+void sendData(){
+    serializeJson(doc, OutputSerial);
+}
+
+
+void receiveData(){
+    if(InputSerial.available() > 0){
+        DeserializationError error =  deserializeJson(doc, InputSerial);
+        if(error.code() == ArduinoJson6180_91::DeserializationError::Ok){
+            startMotor = doc["startMotor"];
+            fan2status = doc["fan2status"];
+            sendData();
+        }
+    }
+
+}
+
+
+
 void setup() {
     //to be removed
-   // EEPROM.write(0,1);
+    // EEPROM.write(0,1);
 
     pinMode(bSwitch,INPUT);
     pinMode(fSwitch,INPUT);
@@ -29,24 +68,24 @@ void setup() {
 }
 
 void loop() {
-// write your code here
+    // write your code here
 
-//TODO: codes to listen to serial monitor for instruction on motor and fans
+    //TODO: codes to listen to serial monitor for instruction on motor and fans
 
-//if(demo.isReady()){
-//    startMotor = true;
-//    demo.reset();
-//}
+    //if(demo.isReady()){
+    //    startMotor = true;
+    //    demo.reset();
+    //}
     digitalWrite(fanOut,HIGH);
 
     Serial.println("===================");
     Serial.println(restingPosition);
     Serial.println("===================");
 
-if(startMotor==false){
-    digitalWrite(motA,LOW);
-    digitalWrite(motB,LOW);
-}
+    if(!startMotor){
+        digitalWrite(motA,LOW);
+        digitalWrite(motB,LOW);
+    }
 
     if(digitalRead(fSwitch)==0){
         forwardMotor = false;
@@ -58,7 +97,7 @@ if(startMotor==false){
             EEPROM.write(0,restingPosition);
         }
 
-        if(restingPosition==4 &&startTimerTwo == false){
+        if(restingPosition==4 &&!startTimerTwo){
             startTimerTwo = true;
             positionTwoTimer.reset();
 
@@ -75,14 +114,14 @@ if(startMotor==false){
             EEPROM.write(0,restingPosition);
         }
 
-        if(restingPosition==2 &&startTimerTwo == false){
+        if(restingPosition==2 &&!startTimerTwo){
             startTimerTwo = true;
             positionTwoTimer.reset();
 
         }
     }
 
-    if(positionTwoTimer.isReady()&&startTimerTwo==true){
+    if(positionTwoTimer.isReady()&&!startTimerTwo){
         startMotor=false;
         startTimerTwo=false;
         Serial.println("hapa kazi tuu.");
@@ -98,13 +137,13 @@ if(startMotor==false){
         positionTwoTimer.reset();
     }
 
-    if(forwardMotor==true && startMotor == true){
+    if(forwardMotor && startMotor){
         digitalWrite(motA,HIGH);
         digitalWrite(motB,LOW);
         Serial.println("F===========");
     }
 
-    if(forwardMotor == false && startMotor == true){
+    if(!forwardMotor && startMotor){
         digitalWrite(motA,LOW);
         digitalWrite(motB,HIGH);
         Serial.println("B===========");
