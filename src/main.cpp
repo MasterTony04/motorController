@@ -12,11 +12,11 @@ SimpleTimer demo(180000);
 uint8_t input_rx_pin = 2;
 uint8_t input_tx_pin = 3;
 
-uint8_t output_rx_pin = 5;
-uint8_t output_tx_pin = 6;
+uint8_t output_rx_pin = 4;
+uint8_t output_tx_pin = 5;
 
 SoftwareSerial InputSerial(input_rx_pin, input_tx_pin);
-SoftwareSerial OutputSerial(output_rx_pin, output_rx_pin);
+SoftwareSerial OutputSerial(output_rx_pin, output_tx_pin);
 
 StaticJsonDocument <1024>doc;
 
@@ -38,6 +38,7 @@ void sendData(){
 void receiveData(){
     if(InputSerial.available() > 0){
         DeserializationError error =  deserializeJson(doc, InputSerial);
+        Serial.println(error.c_str());
         if(error.code() == ArduinoJson6180_91::DeserializationError::Ok){
             startMotor = doc["startMotor"];
             fan2status = doc["fan2status"];
@@ -46,8 +47,6 @@ void receiveData(){
     }
 
 }
-
-
 
 void setup() {
     //to be removed
@@ -59,7 +58,9 @@ void setup() {
     pinMode(motB,OUTPUT);
     pinMode(fanOut,OUTPUT);
 
-    Serial.begin(9600);
+    Serial.begin(115200);
+    OutputSerial.begin(115200);
+    InputSerial.begin(115200);
 
     digitalWrite(motA,LOW);
     digitalWrite(motB,LOW);
@@ -76,7 +77,9 @@ void loop() {
     //    startMotor = true;
     //    demo.reset();
     //}
-    digitalWrite(fanOut,HIGH);
+    //    digitalWrite(fanOut,HIGH);
+
+    receiveData();
 
     Serial.println("===================");
     Serial.println(restingPosition);
