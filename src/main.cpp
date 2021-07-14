@@ -1,13 +1,18 @@
 #include <Arduino.h>
 #include<EEPROM.h>
 #include<SimpleTimer.h>
-SimpleTimer positionTwoTimer(36000);
-SimpleTimer demo(180000);
+#include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 
-int bSwitch = 12, fSwitch = 11, fanOut = 10;
-int motA = A0, motB =A1 ;
+SimpleTimer positionTwoTimer(36000);
+SimpleTimer demo(1800000);
+
+SoftwareSerial WSerial(2,3);
+
+uint8_t bSwitch = 12, fSwitch = 11, fanOut = 10;
+uint8_t motA = A0, motB =A1 ;
 bool forwardMotor = true, startMotor = false, timer2Active=false, timer4Active=false;
-int restingPosition = 1;
+uint8_t restingPosition = 1;
 bool startTimerTwo=false, startTimerOne=false;
 
 void setup() {
@@ -21,6 +26,7 @@ void setup() {
     pinMode(fanOut,OUTPUT);
 
     Serial.begin(9600);
+    WSerial.begin(9600);
 
     digitalWrite(motA,LOW);
     digitalWrite(motB,LOW);
@@ -33,15 +39,29 @@ void loop() {
 
 //TODO: codes to listen to serial monitor for instruction on motor and fans
 
-//if(demo.isReady()){
-//    startMotor = true;
-//    demo.reset();
-//}
-    digitalWrite(fanOut,HIGH);
+    StaticJsonDocument<1024> doc;
+    if(WSerial.available()>0){
 
-    Serial.println("===================");
-    Serial.println(restingPosition);
-    Serial.println("===================");
+        DeserializationError error = deserializeJson(doc, WSerial);
+        if(error){
+            Serial.println("Invalid JSON object");
+
+            return;
+        }
+        Serial.println("JSON Object Received");
+       // Serial.println(doc["name"].as<String>());
+        serializeJson(doc,Serial);
+    }
+
+if(demo.isReady()){
+   // startMotor = true;
+    demo.reset();
+}
+   // digitalWrite(fanOut,HIGH);
+
+//    Serial.println("===================");
+//    Serial.println(restingPosition);
+//    Serial.println("===================");
 
 if(startMotor==false){
     digitalWrite(motA,LOW);
@@ -67,7 +87,7 @@ if(startMotor==false){
 
     if(digitalRead(bSwitch)==0){
         forwardMotor = true;
-        Serial.println("Backwards pressed");
+        //Serial.println("Backwards pressed");
 
         if(restingPosition==3){
             startMotor=false;
