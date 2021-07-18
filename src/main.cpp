@@ -5,129 +5,131 @@
 #include <ArduinoJson.h>
 
 SimpleTimer positionTwoTimer(36000);
-SimpleTimer demo(1800000);
+//SimpleTimer demo(180000);
 
-SoftwareSerial WSerial(2,3);
+SoftwareSerial WSerial(2, 3);
 
 uint8_t bSwitch = 12, fSwitch = 11, fanOut = 10;
-uint8_t motA = A0, motB =A1 ;
-bool forwardMotor = true, startMotor = false, timer2Active=false, timer4Active=false;
+uint8_t motA = A0, motB = A1;
+bool forwardMotor = true, startMotor = false, timer2Active = false, timer4Active = false, motorState = false, startTimerTwo = false, startTimerOne = false, startFan = false;
 uint8_t restingPosition = 1;
-bool startTimerTwo=false, startTimerOne=false;
 
 void setup() {
-    //to be removed
-   // EEPROM.write(0,1);
 
-    pinMode(bSwitch,INPUT);
-    pinMode(fSwitch,INPUT);
-    pinMode(motA,OUTPUT);
-    pinMode(motB,OUTPUT);
-    pinMode(fanOut,OUTPUT);
+    pinMode(bSwitch, INPUT);
+    pinMode(fSwitch, INPUT);
+    pinMode(motA, OUTPUT);
+    pinMode(motB, OUTPUT);
+    pinMode(fanOut, OUTPUT);
 
     Serial.begin(9600);
     WSerial.begin(9600);
 
-    digitalWrite(motA,LOW);
-    digitalWrite(motB,LOW);
+    digitalWrite(motA, LOW);
+    digitalWrite(motB, LOW);
     restingPosition = EEPROM.read(0);
 
 }
 
 void loop() {
-// write your code here
-
-//TODO: codes to listen to serial monitor for instruction on motor and fans
-
     StaticJsonDocument<1024> doc;
-    if(WSerial.available()>0){
+    if (WSerial.available() > 0) {
 
         DeserializationError error = deserializeJson(doc, WSerial);
-        if(error){
+        if (error) {
             Serial.println("Invalid JSON object");
 
             return;
         }
         Serial.println("JSON Object Received");
-       // Serial.println(doc["name"].as<String>());
-        serializeJson(doc,Serial);
+        JsonArray array = doc.as<JsonArray>();
+        startFan = array[0].as<bool>();
+        motorState = array[1].as<bool>();
+        serializeJson(doc, Serial);
+        Serial.println();
     }
 
-if(demo.isReady()){
-   // startMotor = true;
-    demo.reset();
-}
-   // digitalWrite(fanOut,HIGH);
+    if (startFan) {
+        digitalWrite(fanOut, HIGH);
 
-//    Serial.println("===================");
-//    Serial.println(restingPosition);
-//    Serial.println("===================");
+    } else {
 
-if(startMotor==false){
-    digitalWrite(motA,LOW);
-    digitalWrite(motB,LOW);
-}
+        digitalWrite(fanOut, LOW);
+    }
+//if(demo.isReady()){
+//    startMotor = true;
+//    demo.reset();
+//
+//}
+    if (motorState) {
+        startMotor = true;
+    }
 
-    if(digitalRead(fSwitch)==0){
+    if (startMotor == false) {
+        digitalWrite(motA, LOW);
+        digitalWrite(motB, LOW);
+    }
+
+    if (digitalRead(fSwitch) == 0) {
         forwardMotor = false;
-        Serial.println("Forward pressed");
+        //  Serial.println("Forward pressed");
 
-        if(restingPosition==1){
-            startMotor=false;
-            restingPosition=2;
-            EEPROM.write(0,restingPosition);
+        if (restingPosition == 1) {
+            startMotor = false;
+            restingPosition = 2;
+            EEPROM.write(0, restingPosition);
         }
 
-        if(restingPosition==4 &&startTimerTwo == false){
+        if (restingPosition == 4 && startTimerTwo == false) {
             startTimerTwo = true;
             positionTwoTimer.reset();
 
         }
     }
 
-    if(digitalRead(bSwitch)==0){
+    if (digitalRead(bSwitch) == 0) {
         forwardMotor = true;
         //Serial.println("Backwards pressed");
 
-        if(restingPosition==3){
-            startMotor=false;
-            restingPosition=4;
-            EEPROM.write(0,restingPosition);
+        if (restingPosition == 3) {
+            startMotor = false;
+            restingPosition = 4;
+            EEPROM.write(0, restingPosition);
         }
 
-        if(restingPosition==2 &&startTimerTwo == false){
+        if (restingPosition == 2 && startTimerTwo == false) {
             startTimerTwo = true;
             positionTwoTimer.reset();
 
         }
     }
 
-    if(positionTwoTimer.isReady()&&startTimerTwo==true){
-        startMotor=false;
-        startTimerTwo=false;
-        Serial.println("hapa kazi tuu.");
-        if(restingPosition==4){
-            restingPosition=1;
-            EEPROM.write(0,restingPosition);
+    if (positionTwoTimer.isReady() && startTimerTwo == true) {
+        startMotor = false;
+        startTimerTwo = false;
+        // Serial.println("hapa kazi tuu.");
+        if (restingPosition == 4) {
+            restingPosition = 1;
+            EEPROM.write(0, restingPosition);
         }
-        if(restingPosition==2){
+        if (restingPosition == 2) {
 
-            restingPosition=3;
-            EEPROM.write(0,restingPosition);
+            restingPosition = 3;
+            EEPROM.write(0, restingPosition);
         }
         positionTwoTimer.reset();
     }
 
-    if(forwardMotor==true && startMotor == true){
-        digitalWrite(motA,HIGH);
-        digitalWrite(motB,LOW);
-        Serial.println("F===========");
+    if (forwardMotor == true && startMotor == true) {
+        digitalWrite(motA, HIGH);
+        digitalWrite(motB, LOW);
+        // Serial.println("F===========");
     }
 
-    if(forwardMotor == false && startMotor == true){
-        digitalWrite(motA,LOW);
-        digitalWrite(motB,HIGH);
-        Serial.println("B===========");
+    if (forwardMotor == false && startMotor == true) {
+        digitalWrite(motA, LOW);
+        digitalWrite(motB, HIGH);
+        // Serial.println("B===========");
     }
 
 }
