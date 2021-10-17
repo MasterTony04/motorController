@@ -13,7 +13,7 @@ uint8_t bSwitch = 12, fSwitch = 11, fanOut = 10;
 uint8_t motA = A0, motB = A1;
 bool forwardMotor = true, startMotor = false, timer2Active = false, timer4Active = false, motorState = false, startTimerTwo = false, startTimerOne = false, startFan = false;
 uint8_t restingPosition = 1;
-
+// I hope this is the new motor controller code for grey incubator
 void setup() {
 
     pinMode(bSwitch, INPUT);
@@ -59,7 +59,7 @@ void loop() {
 //if(demo.isReady()){
 //    startMotor = true;
 //    demo.reset();
-//
+
 //}
     if (motorState) {
         startMotor = true;
