@@ -5,7 +5,7 @@
 #include <ArduinoJson.h>
 
 SimpleTimer positionTwoTimer(36000);
-//SimpleTimer demo(180000);
+SimpleTimer demo(180000);
 
 SoftwareSerial WSerial(2, 3);
 
@@ -52,18 +52,21 @@ void loop() {
     if (startFan) {
         digitalWrite(fanOut, HIGH);
 
-    } else {
+    }
+    else {
 
         digitalWrite(fanOut, LOW);
     }
-//if(demo.isReady()){
-//    startMotor = true;
-//    demo.reset();
 
-//}
-    if (motorState) {
-        startMotor = true;
-    }
+//TODO: for demo purposes only
+if(demo.isReady()){
+    startMotor = true;
+    demo.reset();
+}
+
+//    if (motorState) {
+//        startMotor = true;
+//    }
 
     if (startMotor == false) {
         digitalWrite(motA, LOW);
@@ -72,7 +75,7 @@ void loop() {
 
     if (digitalRead(fSwitch) == 0) {
         forwardMotor = false;
-        //  Serial.println("Forward pressed");
+          Serial.println("Forward pressed");
 
         if (restingPosition == 1) {
             startMotor = false;
@@ -89,7 +92,7 @@ void loop() {
 
     if (digitalRead(bSwitch) == 0) {
         forwardMotor = true;
-        //Serial.println("Backwards pressed");
+        Serial.println("Backwards pressed");
 
         if (restingPosition == 3) {
             startMotor = false;
@@ -107,7 +110,7 @@ void loop() {
     if (positionTwoTimer.isReady() && startTimerTwo == true) {
         startMotor = false;
         startTimerTwo = false;
-        // Serial.println("hapa kazi tuu.");
+        // Serial.println("Hapa kazi tuu.")
         if (restingPosition == 4) {
             restingPosition = 1;
             EEPROM.write(0, restingPosition);
@@ -123,13 +126,21 @@ void loop() {
     if (forwardMotor == true && startMotor == true) {
         digitalWrite(motA, HIGH);
         digitalWrite(motB, LOW);
-        // Serial.println("F===========");
+         Serial.println("F===========");
     }
 
     if (forwardMotor == false && startMotor == true) {
         digitalWrite(motA, LOW);
         digitalWrite(motB, HIGH);
-        // Serial.println("B===========");
+         Serial.println("B===========");
     }
+Serial.println("****************************");
+Serial.print("Resting Position: ");
+Serial.println(restingPosition);
+Serial.print("start Motor: ");
+Serial.println(startMotor);
+Serial.print("forward Motor: ");
+Serial.println(forwardMotor);
+Serial.println("****************************");
 
 }
